@@ -1,1 +1,1 @@
-# poetry-rnn
+# Poetry RNN
