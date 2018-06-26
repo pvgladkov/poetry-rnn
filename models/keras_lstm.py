@@ -11,10 +11,10 @@ import sys
 
 class Model:
 
-    def fit(self, x, y, maxlen, chars, char_indices, indices_char, text):
+    def fit(self, x, y, max_len, chars, char_indices, indices_char, text):
 
         model = Sequential()
-        model.add(LSTM(128, input_shape=(maxlen, len(chars))))
+        model.add(LSTM(128, input_shape=(max_len, len(chars))))
         model.add(Dense(len(chars)))
         model.add(Activation('softmax'))
 
@@ -35,18 +35,18 @@ class Model:
             print()
             print('----- Generating text after Epoch: %d' % epoch)
 
-            start_index = random.randint(0, len(text) - maxlen - 1)
+            start_index = random.randint(0, len(text) - max_len - 1)
             for diversity in [0.2, 0.5, 1.0, 1.2]:
                 print('----- diversity:', diversity)
 
                 generated = ''
-                sentence = text[start_index: start_index + maxlen]
+                sentence = text[start_index: start_index + max_len]
                 generated += sentence
                 print('----- Generating with seed: "' + sentence + '"')
                 sys.stdout.write(generated)
 
                 for i in range(400):
-                    x_pred = np.zeros((1, maxlen, len(chars)))
+                    x_pred = np.zeros((1, max_len, len(chars)))
                     for t, char in enumerate(sentence):
                         x_pred[0, t, char_indices[char]] = 1.
 
