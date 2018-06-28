@@ -12,6 +12,8 @@ if __name__ == '__main__':
         text += f.read().lower()
     with io.open('data/blok_4.txt', encoding='utf-8') as f:
         text += f.read().lower()
+    with io.open('data/blok_5.txt', encoding='utf-8') as f:
+        text += f.read().lower()
     print('corpus length:', len(text))
 
     chars = sorted(list(set(text)))
