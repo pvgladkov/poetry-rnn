@@ -14,6 +14,11 @@ if __name__ == '__main__':
         text += f.read().lower()
     with io.open('data/blok_5.txt', encoding='utf-8') as f:
         text += f.read().lower()
+    with io.open('data/blok_6.txt', encoding='utf-8') as f:
+        text += f.read().lower()
+    with io.open('data/blok_7.txt', encoding='utf-8') as f:
+        text += f.read().lower()
+
     print('corpus length:', len(text))
 
     chars = sorted(list(set(text)))
@@ -39,5 +44,5 @@ if __name__ == '__main__':
             x[i, t, char_indices[char]] = 1
         y[i, char_indices[next_chars[i]]] = 1
 
-    model = Model()
-    model.fit(x, y, max_len, chars, char_indices, indices_char, text)
+    model = Model(max_len, chars, char_indices, indices_char, text)
+    model.fit(x, y)
