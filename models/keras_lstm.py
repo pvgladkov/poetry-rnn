@@ -8,6 +8,8 @@ import numpy as np
 import random
 import sys
 
+from utils.functions import sample
+
 
 class Model:
 
@@ -28,17 +30,7 @@ class Model:
         optimizer = RMSprop(lr=0.01)
         model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
-        def sample(preds, temperature=1.0):
-            # helper function to sample an index from a probability array
-            preds = np.asarray(preds).astype('float64')
-            preds = np.log(preds) / temperature
-            exp_preds = np.exp(preds)
-            preds = exp_preds / np.sum(exp_preds)
-            probas = np.random.multinomial(1, preds, 1)
-            return np.argmax(probas)
-
-        def on_epoch_end(epoch, logs):
-            # Function invoked at end of each epoch. Prints generated text.
+        def on_epoch_end(epoch):
             print()
             print('----- Generating text after Epoch: %d' % epoch)
 
@@ -71,4 +63,4 @@ class Model:
         print_callback = LambdaCallback(on_epoch_end=on_epoch_end)
         tensor_board = TensorBoard(histogram_freq=0, write_grads=True, write_images=True)
 
-        model.fit(x, y, batch_size=128, epochs=200, callbacks=[print_callback, tensor_board])
+        model.fit(x, y, batch_size=128, epochs=400, callbacks=[print_callback, tensor_board])
