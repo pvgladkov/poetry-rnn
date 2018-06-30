@@ -64,7 +64,7 @@ class CharRNN:
         optimizer = RMSprop(lr=0.01)
         model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
-        def on_epoch_end(epoch):
+        def on_epoch_end(epoch, logs):
             print()
             print('----- Generating text after Epoch: %d' % epoch)
 
