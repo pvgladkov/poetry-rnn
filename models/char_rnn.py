@@ -1,17 +1,51 @@
 from __future__ import print_function
+
+import sys
+import random
+import numpy as np
+
 from keras.callbacks import LambdaCallback, TensorBoard
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 from keras.layers import LSTM
 from keras.optimizers import RMSprop
-import numpy as np
-import random
-import sys
 
 from utils.functions import sample
 
 
-class Model:
+class DataProvider:
+
+    def __init__(self, text, max_len):
+        print('corpus length:', len(text))
+        self.text = text
+        self.max_len = max_len
+        self.chars = sorted(list(set(text)))
+        print('total chars:', len(self.chars))
+        self.char_indices = dict((c, i) for i, c in enumerate(self.chars))
+        self.indices_char = dict((i, c) for i, c in enumerate(self.chars))
+
+    def get_data(self):
+        max_len = self.max_len
+        step = 3
+        sentences = []
+        next_chars = []
+        for i in range(0, len(self.text) - max_len, step):
+            sentences.append(self.text[i: i + max_len])
+            next_chars.append(self.text[i + max_len])
+        print('nb sequences:', len(sentences))
+
+        print('Vectorization...')
+        x = np.zeros((len(sentences), max_len, len(self.chars)), dtype=np.bool)
+        y = np.zeros((len(sentences), len(self.chars)), dtype=np.bool)
+        for i, sentence in enumerate(sentences):
+            for t, char in enumerate(sentence):
+                x[i, t, self.char_indices[char]] = 1
+            y[i, self.char_indices[next_chars[i]]] = 1
+
+        return x, y
+
+
+class CharRNN:
 
     def __init__(self, max_len, chars, char_indices, indices_char, text):
         self.max_len = max_len
