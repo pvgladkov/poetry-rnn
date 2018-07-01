@@ -2,6 +2,12 @@ import io
 from models import char_rnn, word_rnn
 import argparse
 
+from keras.optimizers import Adam, RMSprop
+from keras.callbacks import LambdaCallback, TensorBoard
+from utils.functions import on_epoch_end_word, on_epoch_end_char
+
+import logging
+
 
 def get_text():
     txt = ''
@@ -23,6 +29,13 @@ def get_text():
 
 
 if __name__ == '__main__':
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    logger.addHandler(ch)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--type', type=str, default='char', help='char or word', choices=['char', 'word'])
     args = parser.parse_args()
@@ -34,25 +47,34 @@ if __name__ == '__main__':
         data_provider = char_rnn.DataProvider(text, max_len)
 
         X, y = data_provider.get_data()
-        chars = data_provider.chars
-        char_indices = data_provider.char_indices
-        indices_char = data_provider.indices_char
 
-        model = char_rnn.CharRNN(max_len, chars, char_indices, indices_char, text)
-        model.fit(X, y)
+        model = char_rnn.CharRNN(data_provider.vocab)
+        model = model.build()
 
-    elif args.type == 'word':
+        optimizer = RMSprop(lr=0.01)
+
+        def epoch_callback(epoch, logs):
+            return on_epoch_end_char(epoch, logs, model, data_provider.vocab, logger)
+
+    else:
         max_len = 20
         data_provider = word_rnn.DataProvider(text, max_len)
 
         X, y = data_provider.get_data()
 
-        model = word_rnn.WordRNN(max_len,
-                                 data_provider.words,
-                                 data_provider.list_words,
-                                 data_provider.word_indices,
-                                 data_provider.indices_word,
-                                 text,
+        model = word_rnn.WordRNN(data_provider.vocab,
                                  data_provider.embedding_dim,
                                  data_provider.embedding_matrix())
-        model.fit(X, y)
+
+        model = model.build()
+        optimizer = Adam()
+
+        def epoch_callback(epoch, logs):
+            return on_epoch_end_word(epoch, logs, model, data_provider.vocab, logger)
+
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+
+    print_callback = LambdaCallback(on_epoch_end=epoch_callback)
+    tensor_board = TensorBoard(histogram_freq=0, write_grads=True, write_images=True)
+
+    model.fit(X, y, batch_size=128, epochs=200, callbacks=[print_callback, tensor_board])

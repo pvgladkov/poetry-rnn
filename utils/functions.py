@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+import random
 
 
 def sample(preds, temperature=1.0):
@@ -35,3 +37,49 @@ def word_generate(model, max_len, sentence, word_indices, indices_word, diversit
     preds = model.predict(x_pred, verbose=0)[0]
     next_index = sample(preds, diversity)
     return indices_word[next_index]
+
+
+def on_epoch_end_word(epoch, logs, model, vocab, logger):
+
+    logger.info('----- Generating text after Epoch: %d' % epoch)
+
+    start_index = random.randint(0, len(vocab.text) - vocab.max_len - 1)
+    for diversity in [0.2, 0.5, 1.0, 1.2]:
+        logger.info('----- diversity: {}'.format(diversity))
+
+        generated = ''
+        sentence = ' '.join(vocab.list_words[start_index: start_index + vocab.max_len])
+        generated += sentence
+        logger.info('----- Generating with seed: "' + sentence + '"')
+
+        for i in range(400):
+            next_word = word_generate(model, vocab.max_len, sentence,
+                                      vocab.word_indices, vocab.indices_word, diversity)
+
+            generated = generated + ' ' + next_word
+            sentence = ' '.join(sentence.split()[1:] + [next_word])
+
+        logger.info(generated)
+
+
+def on_epoch_end_char(epoch, logs, model, vocab, logger):
+    logger.info('----- Generating text after Epoch: %d' % epoch)
+
+    start_index = random.randint(0, len(vocab.text) - vocab.max_len - 1)
+    for diversity in [0.2, 0.5, 1.0, 1.2]:
+        logger.info('----- diversity: {}'.format(diversity))
+
+        generated = ''
+        sentence = vocab.text[start_index: start_index + vocab.max_len]
+        generated += sentence
+        logger.info('----- Generating with seed: "' + sentence + '"')
+        sys.stdout.write(generated)
+
+        for i in range(400):
+            next_char = char_generate(model, vocab.max_len, vocab.chars, sentence,
+                                      vocab.char_indices, vocab.indices_char, diversity)
+
+            generated += next_char
+            sentence = sentence[1:] + next_char
+
+        logger.info(generated)
