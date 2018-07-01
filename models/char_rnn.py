@@ -10,7 +10,7 @@ from keras.layers import Dense, Activation
 from keras.layers import LSTM
 from keras.optimizers import RMSprop
 
-from utils.functions import sample
+from utils.functions import char_generate
 
 
 class DataProvider:
@@ -35,14 +35,14 @@ class DataProvider:
         print('nb sequences:', len(sentences))
 
         print('Vectorization...')
-        x = np.zeros((len(sentences), max_len, len(self.chars)), dtype=np.bool)
+        X = np.zeros((len(sentences), max_len, len(self.chars)), dtype=np.bool)
         y = np.zeros((len(sentences), len(self.chars)), dtype=np.bool)
         for i, sentence in enumerate(sentences):
             for t, char in enumerate(sentence):
-                x[i, t, self.char_indices[char]] = 1
+                X[i, t, self.char_indices[char]] = 1
             y[i, self.char_indices[next_chars[i]]] = 1
 
-        return x, y
+        return X, y
 
 
 class CharRNN:
@@ -79,13 +79,8 @@ class CharRNN:
                 sys.stdout.write(generated)
 
                 for i in range(400):
-                    x_pred = np.zeros((1, self.max_len, len(self.chars)))
-                    for t, char in enumerate(sentence):
-                        x_pred[0, t, self.char_indices[char]] = 1.
-
-                    preds = model.predict(x_pred, verbose=0)[0]
-                    next_index = sample(preds, diversity)
-                    next_char = self.indices_char[next_index]
+                    next_char = char_generate(model, self.max_len, self.chars, sentence,
+                                              self.char_indices, self.indices_char, diversity)
 
                     generated += next_char
                     sentence = sentence[1:] + next_char
