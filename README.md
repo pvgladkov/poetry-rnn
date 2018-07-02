@@ -12,7 +12,7 @@ Train:
 
 ### WordRNN
 
-Char-level text generation.
+Word-level text generation.
 
 Train:
 
