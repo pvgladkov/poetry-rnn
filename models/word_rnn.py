@@ -2,6 +2,8 @@ import numpy as np
 from gensim.models import KeyedVectors
 from keras.layers import Input, LSTM, Dropout, Dense, Activation, Embedding
 from keras.models import Model
+from utils.text_utils import clean_str
+import pymorphy2
 
 
 from utils.functions import sentences_to_indices
@@ -10,22 +12,22 @@ from utils.functions import sentences_to_indices
 class Vocabulary:
 
     def __init__(self, text, max_len):
-        self.text = text
+        morph = pymorphy2.MorphAnalyzer()
+        self.text = clean_str(text)
         self.max_len = max_len
-
-        self.list_words = self.text.lower().split()
+        self.list_words = [morph.normal_forms(w)[0] for w in self.text.split()]
         self.words = set(self.list_words)
-
         self.word_indices = dict((w, i) for i, w in enumerate(self.words))
         self.indices_word = dict((i, w) for i, w in enumerate(self.words))
 
 
 class DataProvider:
 
-    def __init__(self, text, max_len):
+    def __init__(self, text, max_len, logger):
         self.vocab = Vocabulary(text, max_len)
         self.word2vec = KeyedVectors.load_word2vec_format('./embeddings/word2vec')
         self.embedding_dim = self.word2vec.vector_size
+        self.logger = logger
 
     def get_data(self):
         sentences = []
@@ -47,13 +49,28 @@ class DataProvider:
 
         return X, y
 
+    def collect_unknown_words(self):
+        unknown_words = {}
+        for word in self.vocab.list_words:
+            if word not in self.word2vec:
+                unknown_words[word] = np.random.rand(1, self.embedding_dim)
+        return unknown_words
+
     def embedding_matrix(self):
+
+        unknown_words = self.collect_unknown_words()
+
+        self.logger.info(list(unknown_words.keys())[:50])
+
+        self.logger.info('unknown words: {}'.format(len(unknown_words)))
+        self.logger.info('total words: {}'.format(len(self.vocab.words)))
+
         X = np.zeros((len(self.vocab.word_indices), self.embedding_dim))
         for word, i in self.vocab.word_indices.items():
             if word in self.word2vec:
                 X[i, :] = self.word2vec[word]
             else:
-                X[i, :] = np.zeros((self.embedding_dim, ))
+                X[i, :] = unknown_words[word]
         return X
 
 
@@ -80,7 +97,6 @@ class WordRNN:
         X = Dense(len(self.vocab.words), activation='softmax')(X)
         X = Activation('softmax')(X)
         model = Model(inputs=sentence_indices, outputs=X)
-
         model.summary()
 
         return model

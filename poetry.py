@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     if args.type == 'char':
         max_len = 40
-        data_provider = char_rnn.DataProvider(text, max_len)
+        data_provider = char_rnn.DataProvider(text, max_len, logger)
 
         X, y = data_provider.get_data()
 
@@ -57,8 +57,8 @@ if __name__ == '__main__':
             return on_epoch_end_char(epoch, logs, model, data_provider.vocab, logger)
 
     else:
-        max_len = 20
-        data_provider = word_rnn.DataProvider(text, max_len)
+        max_len = 10
+        data_provider = word_rnn.DataProvider(text, max_len, logger)
 
         X, y = data_provider.get_data()
 

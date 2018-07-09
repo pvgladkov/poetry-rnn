@@ -18,8 +18,9 @@ class Vocabulary:
 
 class DataProvider:
 
-    def __init__(self, text, max_len):
+    def __init__(self, text, max_len, logger):
         self.vocab = Vocabulary(text, max_len)
+        self.logger = logger
 
     def get_data(self):
         max_len = self.vocab.max_len
@@ -51,7 +52,6 @@ class CharRNN:
         model.add(LSTM(128, input_shape=(self.vocab.max_len, len(self.vocab.chars))))
         model.add(Dense(len(self.vocab.chars)))
         model.add(Activation('softmax'))
-
         model.summary()
 
         return model
