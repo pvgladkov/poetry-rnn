@@ -1,3 +1,8 @@
+"""
+Recurrent Neural Network that learns to predict the next character in a sequence.
+http://karpathy.github.io/2015/05/21/rnn-effectiveness/
+"""
+
 from __future__ import print_function
 
 import numpy as np
